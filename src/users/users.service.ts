@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -15,6 +15,13 @@ export class UsersService {
   async create(registerUserDto: RegisterUserDto): Promise<User> {
     const { username, password } = registerUserDto;
 
+    const existingUser = await this.userRepository.findOne({
+      where: { username },
+    });
+    if (existingUser) {
+      throw new NotFoundException('Username already exists');
+    }
+
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -26,10 +33,18 @@ export class UsersService {
   }
 
   async findOne(id: number): Promise<User> {
-    return this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
   async findByUsername(username: string): Promise<User> {
-    return this.userRepository.findOne({ where: { username } });
+    const user = await this.userRepository.findOne({ where: { username } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 }
