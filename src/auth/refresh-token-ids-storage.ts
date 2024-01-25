@@ -17,7 +17,7 @@ export class RefreshTokenIdsStorage
   onApplicationBootstrap() {
     this.redisClient = new Redis({
       host: this.configService.get('REDIS_HOST'),
-      port: this.configService.get('REDIS_PORT'),
+      port: this.configService.get('REDIS_PORT') || 6379,
     });
   }
 
