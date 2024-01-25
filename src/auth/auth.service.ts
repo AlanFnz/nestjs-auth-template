@@ -21,7 +21,7 @@ export class AuthService {
     password: string,
   ): Promise<boolean> {
     if (userPassword && password) {
-      return bcrypt.compare(password, userPassword);
+      return bcrypt.compare(userPassword, password);
     }
     return false;
   }
