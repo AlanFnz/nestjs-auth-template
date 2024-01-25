@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
-import { RegisterUserDto } from './dto/register-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './user.entity';
 import {
   NotFoundException,
@@ -28,7 +28,7 @@ describe('UsersController', () => {
 
   describe('createUser', () => {
     it('should create a user', async () => {
-      const registerUserDto: RegisterUserDto = {
+      const registerUserDto: CreateUserDto = {
         username: 'testuser',
         password: 'testpassword',
       };
@@ -43,7 +43,7 @@ describe('UsersController', () => {
     });
 
     it('should handle a username already exists error', async () => {
-      const registerUserDto: RegisterUserDto = {
+      const registerUserDto: CreateUserDto = {
         username: 'existinguser',
         password: 'testpassword',
       };
@@ -61,7 +61,7 @@ describe('UsersController', () => {
     });
 
     it('should handle other server errors', async () => {
-      const registerUserDto: RegisterUserDto = {
+      const registerUserDto: CreateUserDto = {
         username: 'testuser',
         password: 'testpassword',
       };

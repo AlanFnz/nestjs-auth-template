@@ -3,7 +3,7 @@ import { UsersService } from './users.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
-import { RegisterUserDto } from './dto/register-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { NotFoundException } from '@nestjs/common';
 
 describe('UsersService', () => {
@@ -31,7 +31,7 @@ describe('UsersService', () => {
 
   describe('create', () => {
     it('should create a user', async () => {
-      const registerUserDto: RegisterUserDto = {
+      const registerUserDto: CreateUserDto = {
         username: 'testuser',
         password: 'testpassword',
       };
@@ -55,7 +55,7 @@ describe('UsersService', () => {
     });
 
     it('should throw NotFoundException for existing username', async () => {
-      const registerUserDto: RegisterUserDto = {
+      const registerUserDto: CreateUserDto = {
         username: 'existinguser',
         password: 'testpassword',
       };

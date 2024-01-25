@@ -8,7 +8,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { RegisterUserDto } from './dto/register-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './user.entity';
 import { ErrorResponse } from 'src/types';
 
@@ -18,7 +18,7 @@ export class UsersController {
 
   @Post()
   async createUser(
-    @Body() registerUserDto: RegisterUserDto,
+    @Body() registerUserDto: CreateUserDto,
   ): Promise<User | ErrorResponse> {
     try {
       return await this.usersService.create(registerUserDto);

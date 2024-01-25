@@ -1,7 +1,7 @@
 import { Body, Controller, Headers, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
-import { RegisterUserDto } from '../users/dto/register-user.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { Public } from './decorators/public.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -15,7 +15,7 @@ export class AuthController {
 
   @Public()
   @Post('sign-up')
-  async signUp(@Body() registerUserDto: RegisterUserDto) {
+  async signUp(@Body() registerUserDto: CreateUserDto) {
     return this.usersService.create(registerUserDto);
   }
 
