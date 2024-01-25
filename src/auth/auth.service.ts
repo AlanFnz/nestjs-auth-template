@@ -73,4 +73,13 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
+
+  async invalidateToken(accessToken: string): Promise<void> {
+    try {
+      const decoded = await this.jwtService.verifyAsync(accessToken);
+      await this.refreshTokenIdsStorage.invalidate(decoded.sub);
+    } catch (error) {
+      throw new UnauthorizedException('Invalid access token');
+    }
+  }
 }

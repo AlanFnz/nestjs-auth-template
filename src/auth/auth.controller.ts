@@ -1,9 +1,10 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Headers, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { RegisterUserDto } from '../users/dto/register-user.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { Public } from './decorators/public.decorator';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -22,5 +23,13 @@ export class AuthController {
   @Post('sign-in')
   async signIn(@Body() signInDto: SignInDto) {
     return this.authService.signIn(signInDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('invalidate-token')
+  async invalidateToken(@Headers('authorization') authorization: string) {
+    const token = authorization.split(' ')[1];
+    await this.authService.invalidateToken(token);
+    return { message: 'Token invalidated successfully' };
   }
 }
