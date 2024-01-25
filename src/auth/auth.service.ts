@@ -1,14 +1,19 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
 import { SignInDto } from './dto/sign-in.dto';
+import { JwtRefreshTokenStrategy } from './strategy/jwt-refresh-token.strategy';
+import { RefreshTokenIdsStorage } from './refresh-token-ids-storage';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(JwtRefreshTokenStrategy.name);
+
   constructor(
     private usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly refreshTokenIdsStorage: RefreshTokenIdsStorage,
   ) {}
 
   async validatePassword(
@@ -52,5 +57,20 @@ export class AuthService {
       return result;
     }
     return null;
+  }
+
+  async refreshAccessToken(
+    refreshToken: string,
+  ): Promise<{ access_token: string }> {
+    try {
+      const decoded = await this.jwtService.verifyAsync(refreshToken);
+      await this.refreshTokenIdsStorage.validate(decoded.sub, refreshToken);
+      const payload = { sub: decoded.sub, username: decoded.username };
+      const accessToken = await this.jwtService.signAsync(payload);
+      return { access_token: accessToken };
+    } catch (error) {
+      this.logger.error(`Error: ${error.message}`);
+      throw new UnauthorizedException('Invalid refresh token');
+    }
   }
 }
