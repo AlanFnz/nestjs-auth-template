@@ -32,6 +32,7 @@ describe('UsersService', () => {
   describe('create', () => {
     it('should create a user', async () => {
       const registerUserDto: CreateUserDto = {
+        email: 'test@test.com',
         username: 'testuser',
         password: 'testpassword',
       };
@@ -56,6 +57,7 @@ describe('UsersService', () => {
 
     it('should throw NotFoundException for existing username', async () => {
       const registerUserDto: CreateUserDto = {
+        email: 'test@test.com',
         username: 'existinguser',
         password: 'testpassword',
       };

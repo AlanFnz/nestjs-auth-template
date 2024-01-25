@@ -29,6 +29,7 @@ describe('UsersController', () => {
   describe('createUser', () => {
     it('should create a user', async () => {
       const registerUserDto: CreateUserDto = {
+        email: 'test@test.com',
         username: 'testuser',
         password: 'testpassword',
       };
@@ -44,6 +45,7 @@ describe('UsersController', () => {
 
     it('should handle a username already exists error', async () => {
       const registerUserDto: CreateUserDto = {
+        email: 'test@test.com',
         username: 'existinguser',
         password: 'testpassword',
       };
@@ -62,6 +64,7 @@ describe('UsersController', () => {
 
     it('should handle other server errors', async () => {
       const registerUserDto: CreateUserDto = {
+        email: 'test@test.com',
         username: 'testuser',
         password: 'testpassword',
       };
