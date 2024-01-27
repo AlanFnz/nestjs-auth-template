@@ -50,6 +50,8 @@ export class AuthService {
       expiresIn: '1d',
     });
 
+    await this.refreshTokenIdsStorage.insert(user.id, refreshToken);
+
     return { access_token: accessToken, refresh_token: refreshToken };
   }
 
