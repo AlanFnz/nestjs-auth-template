@@ -1,12 +1,19 @@
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsEmail } from 'class-validator';
+import { IsUsernameOrEmailNotEmpty } from '../validators/custom-validators';
 
 export class SignInDto {
-  @IsNotEmpty()
-  email: string;
+  @IsEmail()
+  @IsOptional()
+  email?: string;
 
-  @IsNotEmpty()
-  username: string;
+  @IsOptional()
+  username?: string;
 
   @IsNotEmpty()
   password: string;
+
+  @IsUsernameOrEmailNotEmpty({
+    message: 'Either username or email must be provided',
+  })
+  usernameOrEmailNotEmpty: boolean;
 }

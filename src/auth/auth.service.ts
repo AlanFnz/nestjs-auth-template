@@ -27,12 +27,12 @@ export class AuthService {
   }
 
   async signIn(signInDto: SignInDto) {
-    const { username, password } = signInDto;
+    const { username, email, password } = signInDto;
 
-    const user = await this.usersService.findByUsername(username);
+    const user = await this.usersService.findByUsernameOrEmail(username, email);
 
     if (!user) {
-      throw new UnauthorizedException('Invalid username or password');
+      throw new UnauthorizedException('Invalid username or email');
     }
 
     const passwordIsValid = await this.validatePassword(
@@ -41,7 +41,7 @@ export class AuthService {
     );
 
     if (!passwordIsValid) {
-      throw new UnauthorizedException('Invalid username or password');
+      throw new UnauthorizedException('Invalid password');
     }
 
     const payload = { sub: user.id, username: user.username };
