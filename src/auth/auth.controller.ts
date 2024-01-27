@@ -3,8 +3,10 @@ import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { SignInDto } from './dto/sign-in.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from './decorators/public.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { JwtRefreshTokenGuard } from './guards/jwt-refresh-token.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -23,6 +25,12 @@ export class AuthController {
   @Post('sign-in')
   async signIn(@Body() signInDto: SignInDto) {
     return this.authService.signIn(signInDto);
+  }
+
+  @UseGuards(JwtRefreshTokenGuard)
+  @Post('refresh-token')
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
+    return this.authService.refreshAccessToken(refreshTokenDto.refresh_token);
   }
 
   @UseGuards(JwtAuthGuard)
