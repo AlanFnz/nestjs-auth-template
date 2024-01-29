@@ -1,0 +1,32 @@
+service: nestjs-jwt-template
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  memorySize: 128
+  timeout: 300 # increased for debuggin purposes
+  region: us-east-1
+  stage: dev
+  ecr:
+    images:
+      nestjs-jwt-template:
+        path: .
+
+functions:
+  app:
+    image:
+      name: nestjs-jwt-template
+    events:
+      - http:
+          path: /{any+}
+          method: any
+          cors: true
+
+plugins:
+  - serverless-offline
+  - serverless-plugin-typescript
+
+custom:
+  serverless-offline:
+    host: '0.0.0.0'
+    httpPort: 3000
