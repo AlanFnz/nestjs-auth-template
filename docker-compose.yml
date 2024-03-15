@@ -6,7 +6,7 @@ services:
     environment:
       - POSTGRES_USER=nestjs
       - POSTGRES_PASSWORD=nestjs1234
-      - POSTGRES_DB=nestjs-jwt-auth-template
+      - POSTGRES_DB=nestjs-auth-template
     container_name: postgres
     volumes:
       - ./pgdata:/var/lib/postgresql/data
