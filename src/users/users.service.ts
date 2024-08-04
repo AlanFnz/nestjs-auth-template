@@ -1,3 +1,4 @@
+import * as bcrypt from 'bcrypt';
 import {
   ConflictException,
   Injectable,
@@ -7,7 +8,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './user.entity';
-import * as bcrypt from 'bcrypt';
+import { TEXTS } from 'src/constants/texts';
 
 @Injectable()
 export class UsersService {
@@ -26,8 +27,8 @@ export class UsersService {
     if (existingUser) {
       throw new ConflictException(
         existingUser.username === username
-          ? 'Username already exists'
-          : 'Email already in use',
+          ? TEXTS.MESSAGES.USER.USERNAME_ALREADY_EXISTS
+          : TEXTS.MESSAGES.USER.EMAIL_EXISTS,
       );
     }
     const salt = await bcrypt.genSalt();
@@ -44,7 +45,7 @@ export class UsersService {
   async findOne(id: number): Promise<User> {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(TEXTS.MESSAGES.USER.USER_NOT_FOUND);
     }
     return user;
   }
@@ -52,7 +53,7 @@ export class UsersService {
   async findByUsername(username: string): Promise<User> {
     const user = await this.userRepository.findOne({ where: { username } });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(TEXTS.MESSAGES.USER.USER_NOT_FOUND);
     }
     return user;
   }
@@ -60,7 +61,7 @@ export class UsersService {
   async findByEmail(email: string): Promise<User> {
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(TEXTS.MESSAGES.USER.USER_NOT_FOUND);
     }
     return user;
   }

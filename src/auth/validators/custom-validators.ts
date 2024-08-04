@@ -5,6 +5,7 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
+import { TEXTS } from '../../constants/texts';
 
 @ValidatorConstraint({ async: false })
 export class IsUsernameOrEmailNotEmptyConstraint
@@ -16,7 +17,7 @@ export class IsUsernameOrEmailNotEmptyConstraint
   }
 
   defaultMessage() {
-    return 'Either username or email must be provided';
+    return TEXTS.MESSAGES.AUTH.VALIDATIONS.USER_OR_EMAIL_NOT_EMPTY;
   }
 }
 

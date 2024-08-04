@@ -7,6 +7,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from './decorators/public.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtRefreshTokenGuard } from './guards/jwt-refresh-token.guard';
+import { TEXTS } from '../constants/texts';
 
 @Controller('auth')
 export class AuthController {
@@ -38,6 +39,6 @@ export class AuthController {
   async invalidateToken(@Headers('authorization') authorization: string) {
     const token = authorization.split(' ')[1];
     await this.authService.invalidateToken(token);
-    return { message: 'Token invalidated successfully' };
+    return { message: TEXTS.MESSAGES.AUTH.TOKEN_INVALIDATED_SUCCESSFULLY };
   }
 }

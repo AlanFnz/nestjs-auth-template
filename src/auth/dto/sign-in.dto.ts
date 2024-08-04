@@ -1,5 +1,6 @@
 import { IsNotEmpty, IsOptional, IsEmail } from 'class-validator';
 import { IsUsernameOrEmailNotEmpty } from '../validators/custom-validators';
+import { TEXTS } from '../../constants/texts';
 
 export class SignInDto {
   @IsEmail()
@@ -13,7 +14,7 @@ export class SignInDto {
   password: string;
 
   @IsUsernameOrEmailNotEmpty({
-    message: 'Either username or email must be provided',
+    message: TEXTS.MESSAGES.AUTH.VALIDATIONS.USER_OR_EMAIL_NOT_EMPTY,
   })
   usernameOrEmailNotEmpty: boolean;
 }

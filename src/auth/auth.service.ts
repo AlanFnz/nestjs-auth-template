@@ -1,10 +1,11 @@
+import * as bcrypt from 'bcrypt';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
-import * as bcrypt from 'bcrypt';
 import { SignInDto } from './dto/sign-in.dto';
 import { JwtRefreshTokenStrategy } from './strategy/jwt-refresh-token.strategy';
 import { RefreshTokenIdsStorage } from './refresh-token-ids-storage';
+import { TEXTS } from '../constants/texts';
 
 @Injectable()
 export class AuthService {
@@ -32,7 +33,7 @@ export class AuthService {
     const user = await this.usersService.findByUsernameOrEmail(username, email);
 
     if (!user) {
-      throw new UnauthorizedException('Invalid username or email');
+      throw new UnauthorizedException(TEXTS.MESSAGES.AUTH.INVALID_CREDENTIALS);
     }
 
     const passwordIsValid = await this.validatePassword(
@@ -41,7 +42,7 @@ export class AuthService {
     );
 
     if (!passwordIsValid) {
-      throw new UnauthorizedException('Invalid password');
+      throw new UnauthorizedException(TEXTS.MESSAGES.AUTH.INVALID_PASSWORD);
     }
 
     const payload = { sub: user.id, username: user.username };
@@ -79,8 +80,12 @@ export class AuthService {
 
       return { access_token: accessToken, refresh_token: newRefreshToken };
     } catch (error) {
-      this.logger.error(`Error: ${error.message}`);
-      throw new UnauthorizedException('Invalid refresh token');
+      this.logger.error(
+        `${TEXTS.MESSAGES.GENERIC.ERROR_MESSAGE_COMPOSE} ${error.message}`,
+      );
+      throw new UnauthorizedException(
+        TEXTS.MESSAGES.AUTH.INVALID_REFRESH_TOKEN,
+      );
     }
   }
 
@@ -89,7 +94,7 @@ export class AuthService {
       const decoded = await this.jwtService.verifyAsync(accessToken);
       await this.refreshTokenIdsStorage.invalidate(decoded.sub);
     } catch (error) {
-      throw new UnauthorizedException('Invalid access token');
+      throw new UnauthorizedException(TEXTS.MESSAGES.AUTH.INVALID_ACCESS_TOKEN);
     }
   }
 }
