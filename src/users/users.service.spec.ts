@@ -4,7 +4,8 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -16,7 +17,7 @@ describe('UsersService', () => {
         UsersService,
         {
           provide: getRepositoryToken(User),
-          useClass: Repository, // Use the actual Repository class
+          useClass: Repository,
         },
       ],
     }).compile();
@@ -36,8 +37,13 @@ describe('UsersService', () => {
         username: 'testuser',
         password: 'testpassword',
       };
+
+      const hashedPassword = await bcrypt.hash(registerUserDto.password, 10);
+
       const user = new User();
       user.username = 'testuser';
+      user.email = 'test@test.com';
+      user.password = hashedPassword;
 
       const findOneSpy = jest
         .spyOn(userRepository, 'findOne')
@@ -50,12 +56,18 @@ describe('UsersService', () => {
 
       expect(result).toEqual(user);
       expect(findOneSpy).toHaveBeenCalledWith({
-        where: { username: 'testuser' },
+        where: [{ username: 'testuser' }, { email: 'test@test.com' }],
       });
-      expect(saveSpy).toHaveBeenCalledWith(user);
+      expect(saveSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          username: 'testuser',
+          email: 'test@test.com',
+          password: expect.any(String), // Matching the password as a string (hashed password)
+        }),
+      );
     });
 
-    it('should throw NotFoundException for existing username', async () => {
+    it('should throw ConflictException for existing username', async () => {
       const registerUserDto: CreateUserDto = {
         email: 'test@test.com',
         username: 'existinguser',
@@ -72,10 +84,35 @@ describe('UsersService', () => {
       try {
         await service.create(registerUserDto);
       } catch (error) {
-        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error).toBeInstanceOf(ConflictException);
         expect(error.message).toBe('Username already exists');
         expect(findOneSpy).toHaveBeenCalledWith({
-          where: { username: 'existinguser' },
+          where: [{ username: 'existinguser' }, { email: 'test@test.com' }],
+        });
+      }
+    });
+
+    it('should throw ConflictException for existing email', async () => {
+      const registerUserDto: CreateUserDto = {
+        email: 'existing@test.com',
+        username: 'newuser',
+        password: 'testpassword',
+      };
+
+      const existingUser = new User();
+      existingUser.email = 'existing@test.com';
+
+      const findOneSpy = jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue(existingUser);
+
+      try {
+        await service.create(registerUserDto);
+      } catch (error) {
+        expect(error).toBeInstanceOf(ConflictException);
+        expect(error.message).toBe('Email already in use');
+        expect(findOneSpy).toHaveBeenCalledWith({
+          where: [{ username: 'newuser' }, { email: 'existing@test.com' }],
         });
       }
     });

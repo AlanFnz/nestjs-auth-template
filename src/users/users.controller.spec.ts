@@ -1,8 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from './user.entity';
+import { Repository } from 'typeorm';
+import { CreateUserDto } from './dto/create-user.dto';
 import {
   NotFoundException,
   InternalServerErrorException,
@@ -15,7 +17,13 @@ describe('UsersController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
-      providers: [UsersService], // Add the UsersService provider
+      providers: [
+        UsersService,
+        {
+          provide: getRepositoryToken(User),
+          useClass: Repository,
+        },
+      ],
     }).compile();
 
     controller = module.get<UsersController>(UsersController);
@@ -36,7 +44,8 @@ describe('UsersController', () => {
 
       const user: User = new User();
       user.username = 'testuser';
-      // Mock the createUser method to return the user
+      user.email = 'test@test.com';
+
       jest.spyOn(usersService, 'create').mockResolvedValue(user);
 
       const result = await controller.createUser(registerUserDto);
@@ -50,7 +59,6 @@ describe('UsersController', () => {
         password: 'testpassword',
       };
 
-      // Mock the createUser method to throw a NotFoundException
       jest
         .spyOn(usersService, 'create')
         .mockRejectedValue(new NotFoundException());
@@ -69,7 +77,6 @@ describe('UsersController', () => {
         password: 'testpassword',
       };
 
-      // Mock the createUser method to throw an InternalServerErrorException
       jest
         .spyOn(usersService, 'create')
         .mockRejectedValue(new InternalServerErrorException());
@@ -87,6 +94,7 @@ describe('UsersController', () => {
       const userId = 1;
       const user: User = new User();
       user.id = userId;
+
       jest.spyOn(usersService, 'findOne').mockResolvedValue(user);
 
       const result = await controller.findUserById(userId);
@@ -122,6 +130,7 @@ describe('UsersController', () => {
       const username = 'testuser';
       const user: User = new User();
       user.username = username;
+
       jest.spyOn(usersService, 'findByUsername').mockResolvedValue(user);
 
       const result = await controller.findUserByUsername(username);
