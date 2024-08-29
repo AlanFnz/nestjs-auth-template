@@ -4,14 +4,14 @@ services:
     image: postgres
     restart: always
     environment:
-      - POSTGRES_USER=nestjs
-      - POSTGRES_PASSWORD=nestjs1234
-      - POSTGRES_DB=nestjs-auth-template
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     container_name: postgres
     volumes:
       - ./pgdata:/var/lib/postgresql/data
     ports:
-      - '5432:5432'
+      - '${DB_PORT}:${DB_PORT}'
 
   app:
     build:
@@ -21,7 +21,7 @@ services:
     environment:
       - PORT=${PORT}
     ports:
-      - '3000:3000'
+      - '${PORT}:${PORT}'
     depends_on:
       - db
     volumes:
@@ -30,12 +30,12 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     restart: always
-    container_name: nest-pgadmin4
+    container_name: ${PGADMIN_CONTAINER_NAME}
     environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
-      - PGADMIN_DEFAULT_PASSWORD=pgadmin4
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
     ports:
-      - '5050:80'
+      - '${PGADMIN_PORT}:${PGADMIN_PORT_FORWARD}'
     depends_on:
       - db
 
@@ -44,11 +44,11 @@ services:
     env_file:
       - .env
     ports:
-      - '6379:6379'
+      - '${CACHE_PORT}:${CACHE_PORT}'
 
   redisinsight:
     image: redislabs/redisinsight
     ports:
-      - '8001:8001'
+      - '${REDISINSIGHT_PORT}:${REDISINSIGHT_PORT}'
 volumes:
   postgres_data:
