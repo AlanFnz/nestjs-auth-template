@@ -5,7 +5,6 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { TEXTS } from '../../constants/texts';
 
 @ValidatorConstraint({ async: false })
 export class IsUsernameOrEmailNotEmptyConstraint
@@ -13,21 +12,21 @@ export class IsUsernameOrEmailNotEmptyConstraint
 {
   validate(value: any, args: ValidationArguments) {
     const object = args.object as any;
-    return object.username || object.email;
+    return !!object.username || !!object.email;
   }
 
   defaultMessage() {
-    return TEXTS.MESSAGES.AUTH.VALIDATIONS.USER_OR_EMAIL_NOT_EMPTY;
+    return 'Either username or email must be provided';
   }
 }
 
 export function IsUsernameOrEmailNotEmpty(
   validationOptions?: ValidationOptions,
 ) {
-  return function (object: any, propertyName: string) {
+  return function <T extends { new (...args: any[]): object }>(constructor: T) {
     registerDecorator({
-      target: object.constructor,
-      propertyName: propertyName,
+      target: constructor.prototype,
+      propertyName: undefined,
       options: validationOptions,
       constraints: [],
       validator: IsUsernameOrEmailNotEmptyConstraint,
