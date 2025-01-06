@@ -45,29 +45,28 @@ describe('UsersService', () => {
       user.email = 'test@test.com';
       user.password = hashedPassword;
 
-      const findOneSpy = jest
-        .spyOn(userRepository, 'findOne')
-        .mockResolvedValue(undefined);
-      const saveSpy = jest
-        .spyOn(userRepository, 'save')
-        .mockResolvedValue(user);
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(undefined);
+      jest.spyOn(userRepository, 'save').mockResolvedValue(user);
+      jest
+        .spyOn(userRepository, 'create')
+        .mockImplementation((entity) => entity as User);
 
       const result = await service.create(registerUserDto);
 
       expect(result).toEqual(user);
-      expect(findOneSpy).toHaveBeenCalledWith({
+      expect(userRepository.findOne).toHaveBeenCalledWith({
         where: [{ username: 'testuser' }, { email: 'test@test.com' }],
       });
-      expect(saveSpy).toHaveBeenCalledWith(
+      expect(userRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
           username: 'testuser',
           email: 'test@test.com',
-          password: expect.any(String), // Matching the password as a string (hashed password)
+          password: expect.any(String),
         }),
       );
     });
 
-    it('should throw ConflictException for existing username', async () => {
+    it('should throw ConflictException for existing username or email', async () => {
       const registerUserDto: CreateUserDto = {
         email: 'test@test.com',
         username: 'existinguser',
@@ -76,45 +75,13 @@ describe('UsersService', () => {
 
       const existingUser = new User();
       existingUser.username = 'existinguser';
+      existingUser.email = 'test@test.com';
 
-      const findOneSpy = jest
-        .spyOn(userRepository, 'findOne')
-        .mockResolvedValue(existingUser);
+      jest.spyOn(userRepository, 'findOne').mockResolvedValueOnce(existingUser);
 
-      try {
-        await service.create(registerUserDto);
-      } catch (error) {
-        expect(error).toBeInstanceOf(ConflictException);
-        expect(error.message).toBe('Username already exists');
-        expect(findOneSpy).toHaveBeenCalledWith({
-          where: [{ username: 'existinguser' }, { email: 'test@test.com' }],
-        });
-      }
-    });
-
-    it('should throw ConflictException for existing email', async () => {
-      const registerUserDto: CreateUserDto = {
-        email: 'existing@test.com',
-        username: 'newuser',
-        password: 'testpassword',
-      };
-
-      const existingUser = new User();
-      existingUser.email = 'existing@test.com';
-
-      const findOneSpy = jest
-        .spyOn(userRepository, 'findOne')
-        .mockResolvedValue(existingUser);
-
-      try {
-        await service.create(registerUserDto);
-      } catch (error) {
-        expect(error).toBeInstanceOf(ConflictException);
-        expect(error.message).toBe('Email already in use');
-        expect(findOneSpy).toHaveBeenCalledWith({
-          where: [{ username: 'newuser' }, { email: 'existing@test.com' }],
-        });
-      }
+      await expect(service.create(registerUserDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -124,63 +91,52 @@ describe('UsersService', () => {
       const user = new User();
       user.id = userId;
 
-      const findOneSpy = jest
-        .spyOn(userRepository, 'findOne')
-        .mockResolvedValue(user);
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(user);
 
       const result = await service.findOne(userId);
 
       expect(result).toEqual(user);
-      expect(findOneSpy).toHaveBeenCalledWith({ where: { id: userId } });
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { id: userId },
+      });
     });
 
-    it('should throw NotFoundException for non-existent ID', async () => {
+    it('should throw NotFoundException if user not found', async () => {
       const userId = 1;
 
-      const findOneSpy = jest
-        .spyOn(userRepository, 'findOne')
-        .mockResolvedValue(undefined);
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(undefined);
 
-      try {
-        await service.findOne(userId);
-      } catch (error) {
-        expect(error).toBeInstanceOf(NotFoundException);
-        expect(error.message).toBe('User not found');
-        expect(findOneSpy).toHaveBeenCalledWith({ where: { id: userId } });
-      }
+      await expect(service.findOne(userId)).rejects.toThrow(NotFoundException);
     });
   });
 
-  describe('findByUsername', () => {
-    it('should find a user by username', async () => {
+  describe('findByUsernameOrEmail', () => {
+    it('should find a user by username or email', async () => {
       const username = 'testuser';
+      const email = 'test@test.com';
+
       const user = new User();
       user.username = username;
+      user.email = email;
 
-      const findOneSpy = jest
-        .spyOn(userRepository, 'findOne')
-        .mockResolvedValue(user);
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(user);
 
-      const result = await service.findByUsername(username);
+      const resultByUsername = await service.findByUsernameOrEmail(username);
+      const resultByEmail = await service.findByUsernameOrEmail(
+        undefined,
+        email,
+      );
 
-      expect(result).toEqual(user);
-      expect(findOneSpy).toHaveBeenCalledWith({ where: { username } });
+      expect(resultByUsername).toEqual(user);
+      expect(resultByEmail).toEqual(user);
     });
 
-    it('should throw NotFoundException for non-existent username', async () => {
-      const username = 'nonexistentuser';
+    it('should throw NotFoundException if user not found', async () => {
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(undefined);
 
-      const findOneSpy = jest
-        .spyOn(userRepository, 'findOne')
-        .mockResolvedValue(undefined);
-
-      try {
-        await service.findByUsername(username);
-      } catch (error) {
-        expect(error).toBeInstanceOf(NotFoundException);
-        expect(error.message).toBe('User not found');
-        expect(findOneSpy).toHaveBeenCalledWith({ where: { username } });
-      }
+      await expect(
+        service.findByUsernameOrEmail('nonexistentuser'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

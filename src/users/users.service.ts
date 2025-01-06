@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './user.entity';
 import { TEXTS } from 'src/constants/texts';
@@ -14,12 +15,66 @@ import { TEXTS } from 'src/constants/texts';
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async create(registerUserDto: CreateUserDto): Promise<User> {
     const { username, email, password } = registerUserDto;
 
+    await this.ensureUserDoesNotExist(username, email);
+
+    const hashedPassword = await this.hashPassword(password);
+    const user = this.userRepository.create({
+      username,
+      email,
+      password: hashedPassword,
+    });
+
+    return this.userRepository.save(user);
+  }
+
+  async findOne(id: number): Promise<User> {
+    return this.findUserOrThrow({ id });
+  }
+
+  async findByUsername(username: string): Promise<User> {
+    return this.findUserOrThrow({ username });
+  }
+
+  async findByEmail(email: string): Promise<User> {
+    return this.findUserOrThrow({ email });
+  }
+
+  async findByUsernameOrEmail(
+    username?: string,
+    email?: string,
+  ): Promise<User> {
+    if (!username && !email) {
+      throw new NotFoundException(TEXTS.MESSAGES.USER.USER_NOT_FOUND);
+    }
+
+    const user = await this.userRepository.findOne({
+      where: [{ username }, { email }],
+    });
+
+    if (!user) {
+      throw new NotFoundException(TEXTS.MESSAGES.USER.USER_NOT_FOUND);
+    }
+    return user;
+  }
+
+  private async findUserOrThrow(criteria: Partial<User>): Promise<User> {
+    const user = await this.userRepository.findOne({ where: criteria });
+    if (!user) {
+      throw new NotFoundException(TEXTS.MESSAGES.USER.USER_NOT_FOUND);
+    }
+    return user;
+  }
+
+  private async ensureUserDoesNotExist(
+    username: string,
+    email: string,
+  ): Promise<void> {
     const existingUser = await this.userRepository.findOne({
       where: [{ username }, { email }],
     });
@@ -31,52 +86,10 @@ export class UsersService {
           : TEXTS.MESSAGES.USER.EMAIL_EXISTS,
       );
     }
+  }
+
+  private async hashPassword(password: string): Promise<string> {
     const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const user = new User();
-    user.username = username;
-    user.email = email;
-    user.password = hashedPassword;
-
-    return this.userRepository.save(user);
-  }
-
-  async findOne(id: number): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id } });
-    if (!user) {
-      throw new NotFoundException(TEXTS.MESSAGES.USER.USER_NOT_FOUND);
-    }
-    return user;
-  }
-
-  async findByUsername(username: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { username } });
-    if (!user) {
-      throw new NotFoundException(TEXTS.MESSAGES.USER.USER_NOT_FOUND);
-    }
-    return user;
-  }
-
-  async findByEmail(email: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { email } });
-    if (!user) {
-      throw new NotFoundException(TEXTS.MESSAGES.USER.USER_NOT_FOUND);
-    }
-    return user;
-  }
-
-  async findByUsernameOrEmail(
-    username?: string,
-    email?: string,
-  ): Promise<User> {
-    let user: User;
-    if (email) {
-      user = await this.userRepository.findOne({ where: { email } });
-    } else if (username) {
-      user = await this.userRepository.findOne({ where: { username } });
-    }
-
-    return user;
+    return bcrypt.hash(password, salt);
   }
 }
